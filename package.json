@@ -1,0 +1,21 @@
+{
+  "name": "homeworkevents",
+  "version": "1.0.0",
+  "description": "Handle homework through Discord events",
+  "main": "./lib/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Stefanuk12",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.4.0",
+    "fancy-log": "^2.0.0",
+    "mysql2": "^2.3.3",
+    "slashcommandhandler": "^2.2.9"
+  },
+  "devDependencies": {
+    "@types/fancy-log": "^2.0.0"
+  }
+}
