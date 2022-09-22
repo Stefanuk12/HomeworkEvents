@@ -99,7 +99,7 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     // Wait for a submit
     const ModalSubmit = await interaction.awaitModalSubmit({
-        time: 60000
+        time: 180000 // 3 minutes
     })
 
     // catch timeout
