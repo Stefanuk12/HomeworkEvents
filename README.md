@@ -14,6 +14,7 @@ This is mostly technical and purely for documentation.
 ### Class Object
 | Name    | Description                                            | Type   | Optional |
 | ------- | ------------------------------------------------------ | ------ | -------- |
+| Guild   | The guild id for this object                           | string | NO       |
 | Subject | The corrosponding subject                              | string | NO       |
 | Code    | A "class code" that distinguishes classes              | string | NO       |
 | Teacher | The teacher's name for the specific subject class code | string | YES      |
@@ -32,6 +33,7 @@ This is mostly technical and purely for documentation.
 ### Textbook Object
 | Name    | Description                                 | Type   | Optional |
 | ------- | ------------------------------------------- | ------ | -------- |
+| Guild   | The guild id for this object                | string | NO       |
 | Subject | What subject the textbook is for            | string | NO       |
 | Title   | The title of the textbook                   | string | NO       |
 | ISBN    | The ISBN number of the book                 | number | NO       |
