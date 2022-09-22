@@ -15,7 +15,7 @@ export const SlashCommand = new SlashCommandSubcommandBuilder()
 export const NoDefer = true
 
 //
-export function GetHomeworkAddModal() {
+export function GetModal() {
     // Use a modal to get all of the required data
     const modal = new ModalBuilder()
         .setCustomId("homeworkModal")
@@ -83,6 +83,10 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         const Message = "Invalid due in (NaN)"
         DevExecute(log.error, Message)
         throw(new Error(Message))
+    } else if (DueIn < 0) {
+        const Message = "Invalid due in (negative)"
+        DevExecute(log.error, Message)
+        throw(new Error(Message))
     }
 
     // Grab class data
@@ -148,7 +152,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 //
 export async function Callback(interaction: ChatInputCommandInteraction) {
     // Grab the modal
-    const modal = GetHomeworkAddModal()
+    const modal = GetModal() 
 
     // Show it
     await interaction.showModal(modal)

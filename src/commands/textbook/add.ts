@@ -62,7 +62,6 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Title = interaction.fields.getTextInputValue("textbookTitle")
     const ISBN = interaction.fields.getTextInputValue("textbookISBN")
     const Link = interaction.fields.getTextInputValue("textbookLink")
-    console.log(Link)
 
     // Make sure class does not eixst
     if (await Textbook.get(guildId, ISBN)) {
