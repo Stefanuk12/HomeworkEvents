@@ -3,7 +3,7 @@ Handle homework through Discord events. Easily manage homework, allowing your cl
 
 ## Setting up
 - Make sure to download [Node JS](https://nodejs.org/en/download/) and then install Typescript by executing `npm i -g typescript` in your terminal/console
-- Configure all of the details within the config file
+- Configure all of the details within the config file **or** set the `TOKEN` environment variable
 - Import the template database file to your "SQL" server
 - Run the `start.sh` file
   - If on windows, execute each line of the file seperate?
