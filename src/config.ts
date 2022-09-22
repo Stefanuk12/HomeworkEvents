@@ -15,7 +15,7 @@ export const DatabaseConfig = {
 const config = {
     TextbookRefreshDelay: 15, // minutes
     ClassRefreshDelay: 15, // minutes
-    Description: "**Class Data**\nComponent -> %CLASSSUBJECT%/%CLASSCODE%\nLocation -> %CLASSTEACHER% @ %CLASSROOM%\n\n**Additional**\nTextbook -> [%TEXTBOOKTITLE%](%TEXTBOOKLINK)\n\n**Request**\n%REQUEST%",
+    Description: "**Class Data**\nComponent -> %CLASSSUBJECT%/%CLASSCODE%\nLocation -> %CLASSTEACHER% @ %CLASSROOM%\n\n**Additional**\nTextbook -> %TEXTBOOKTITLE% | %TEXTBOOKLINK%\n\n**Request**\n%REQUEST%",
     BotConfig,
     DatabaseConfig
 }

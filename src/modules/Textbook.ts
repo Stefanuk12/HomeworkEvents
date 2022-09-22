@@ -97,7 +97,7 @@ export class Textbook {
         } 
 
         // Add it to the database
-        await Database.Connection.query("INSERT INTO `textbook` (`Guild`, `Subject`, `Title`, `ISBN`) VALUES (?, ?, ?, ?)", [Data.Guild, Data.Subject, Data.Title, Data.ISBN])
+        await Database.Connection.query("INSERT INTO `textbook` (`Guild`, `Subject`, `Title`, `ISBN`, `Link`) VALUES (?, ?, ?, ?, ?)", [Data.Guild, Data.Subject, Data.Title, Data.ISBN, Data.Link])
         DevExecute(log.info, `Added textbook (${Data.ISBN}) to database with guild ${Data.Guild}`)
 
         // Modifying cache after this point
@@ -137,11 +137,8 @@ export class Textbook {
         if (!ModifyCache)
             return
 
-        // Create the textbook object
-        const textbook = new Textbook(Data)
-
         // Make sure already exists
-        const TextbookI = TextbookCache.indexOf(textbook)
+        const TextbookI = TextbookCache.findIndex(tb => tb.ISBN == Data.ISBN && tb.Guild == Data.Guild)
         if (TextbookI == -1)
             return
 

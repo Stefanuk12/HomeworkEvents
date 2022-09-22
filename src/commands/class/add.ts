@@ -1,11 +1,16 @@
 // Dependencies
 import { ActionRowBuilder, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, SlashCommandSubcommandBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Class } from "../../modules/Class.js";
+import log from "fancy-log"
+import { DevExecute } from "../../modules/Utilities.js";
 
 // Slash Command
 export const SlashCommand = new SlashCommandSubcommandBuilder()
     .setName("add")
     .setDescription("Create a new class");
+
+//
+export const NoDefer = true
 
 //
 export function GetModal() {
@@ -60,12 +65,13 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Teacher = interaction.fields.getTextInputValue("classTeacher")
     const Room = interaction.fields.getTextInputValue("classRoom")
 
-    // Make sure class does not eixst
+    // Make sure class does not exist
     if (await Class.get(guildId, Code)) {
         const Message = `Class (${Code}) already exists within guild ${guildId}`
+        DevExecute(log.info, Message)
         throw(new Error(Message))
     }
-        
+
     // Create the object
     const cclass = new Class({
         Guild: guildId,
@@ -77,7 +83,10 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     await cclass.add()
 
     //
-    return interaction.editReply("Done!")
+    return interaction.reply({
+        content: "Done!",
+        ephemeral: true
+    })
 }
 
 //

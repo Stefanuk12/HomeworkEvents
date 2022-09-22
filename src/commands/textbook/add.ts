@@ -8,6 +8,9 @@ export const SlashCommand = new SlashCommandSubcommandBuilder()
     .setDescription("Create a new textbook");
 
 //
+export const NoDefer = true
+
+//
 export function GetModal() {
     // Use a modal to get all of the required data
     const modal = new ModalBuilder()
@@ -59,6 +62,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Title = interaction.fields.getTextInputValue("textbookTitle")
     const ISBN = interaction.fields.getTextInputValue("textbookISBN")
     const Link = interaction.fields.getTextInputValue("textbookLink")
+    console.log(Link)
 
     // Make sure class does not eixst
     if (await Textbook.get(guildId, ISBN)) {
@@ -77,7 +81,10 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     await cclass.add()
 
     //
-    return interaction.editReply("Done!")
+    return interaction.reply({
+        ephemeral: true,
+        content: "Done!"
+    })
 }
 
 //

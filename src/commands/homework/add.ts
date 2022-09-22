@@ -3,11 +3,16 @@ import { ActionRowBuilder, ChatInputCommandInteraction, GuildScheduledEventEntit
 import config from "../../config.js";
 import { Class } from "../../modules/Class.js";
 import { Textbook } from "../../modules/Textbook.js";
+import { DevExecute } from "../../modules/Utilities.js";
+import log from "fancy-log"
 
 // Slash Command
 export const SlashCommand = new SlashCommandSubcommandBuilder()
     .setName("add")
     .setDescription("Create a new homework event");
+
+//
+export const NoDefer = true
 
 //
 export function GetHomeworkAddModal() {
@@ -41,8 +46,9 @@ export function GetHomeworkAddModal() {
     const textbook = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId("homeworkISBN")
         .setLabel("Textbook ISBN")
+        .setMaxLength(13)
         .setRequired(false)
-        .setStyle(TextInputStyle.Paragraph));
+        .setStyle(TextInputStyle.Short));
 
     // Add each actionrow to modal
     modal.addComponents(Class, Title, DueIn, Request, textbook)
@@ -67,15 +73,23 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const strDueIn = interaction.fields.getTextInputValue("homeworkDue")
     const Request = interaction.fields.getTextInputValue("homeworkRequest")
     const ISBN = interaction.fields.getTextInputValue("homeworkISBN")
-    const ShouldUseTextbook = ISBN != "N/A"
+    const ShouldUseTextbook = ISBN.length != 0
 
     // Vars
     const DueIn = parseInt(strDueIn)
+
+    // Check due in
+    if (isNaN(DueIn)) {
+        const Message = "Invalid due in (NaN)"
+        DevExecute(log.error, Message)
+        throw(new Error(Message))
+    }
 
     // Grab class data
     const ClassData = await Class.get(guildId, ClassCode)
     if (!ClassData) {
         const Message = "Invalid class code (does not exist)"
+        DevExecute(log.error, Message)
         throw(new Error(Message))
     }
 
@@ -85,35 +99,50 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         textbook = await Textbook.get(guildId, ISBN)
         if (!textbook) {
             const Message = "Invalid textbook ISBN (does not exist)"
+            DevExecute(log.error, Message)
             throw(new Error(Message))
         }
     }
 
     // Parse the description
     const Description = config.Description
-    Description.replaceAll("%CLASSSUBJECT%", ClassData.Subject)
-    Description.replaceAll("%CLASSCODE%", ClassData.Code)
-    Description.replaceAll("%CLASSTEACHER%", ClassData.Teacher || "N/A")
-    Description.replaceAll("%CLASSROOM%", ClassData.Room || "N/A")
-    Description.replaceAll("%TEXTBOOKTITLE%", textbook?.Title || "N/A")
-    Description.replaceAll("%TEXTBOOKLINK%", textbook?.Link || "https://google.com/")
-    Description.replaceAll("%REQUEST%", Request)
+        .replaceAll("%CLASSSUBJECT%", ClassData.Subject)
+        .replaceAll("%CLASSCODE%", ClassData.Code)
+        .replaceAll("%CLASSTEACHER%", ClassData.Teacher || "N/A")
+        .replaceAll("%CLASSROOM%", ClassData.Room || "N/A")
+        .replaceAll("%TEXTBOOKTITLE%", textbook?.Title || "N/A")
+        .replaceAll("%TEXTBOOKLINK%", textbook?.Link || "https://google.com/")
+        .replaceAll("%REQUEST%", Request);
 
-    // Create
-    const Now = new Date()
-    const Start = Now.getDay()
-    const End = Now.setDate(Start + DueIn)
+    // Calculate the dates
+    let Start = new Date()
+    if (DueIn != 0) {
+        Start.setDate(Start.getDate() + DueIn)
+        Start.setHours(8, 0, 0, 0)
+    } else {
+        Start.setMinutes(Start.getMinutes() + 1)
+    }
+    const End = new Date(Start)
+    End.setHours(23, 59, 59, 99)
+
+    // Create the event
     await guild.scheduledEvents.create({
-        name: `${ClassCode}: ${Title}`,
+        name: `${ClassCode} | ${Title}`,
         scheduledStartTime: Start,
         scheduledEndTime: End,
         privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
         entityType: GuildScheduledEventEntityType.External,
-        description:Description
+        description: Description,
+        entityMetadata: {
+            location: "School"
+        }
     })
 
     //
-    return interaction.editReply("Done!")
+    return interaction.reply({
+        ephemeral: true,
+        content: "Done!"
+    })
 }
 
 //

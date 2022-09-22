@@ -34,11 +34,10 @@ export class Class {
         if (CachedClass && UseCache) {
             DevExecute(log.info, `Retrieved class (${Code}) from cache with guild ${Guild}`)
             return CachedClass
-        }
-            
+        } 
 
         // Query the database
-        const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE `ISBN`=?, `Guild`=?", [Code, Guild])
+        const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE `Code`=? AND `Guild`=?", [Code, Guild])
 
         // Check we got a result
         const ClassDB = result[0]
@@ -84,7 +83,7 @@ export class Class {
         const cclass = new Class(Data)
 
         // Make sure it already does not exist
-        if (await Class.get(Data.Code)) {
+        if (await Class.get(Data.Guild, Data.Code)) {
             // Add it to the cache
             if (ModifyCache && !ClassCache.find(cl => cl == cclass)) {
                 ClassCache.push(cclass)
@@ -122,7 +121,7 @@ export class Class {
         DevExecute(log.warn, `Attempting to remove class (${Data.Code}) from database${ModifyCache ? " and cache" : ""} in guild ${Data.Guild}`)
 
         // Make sure it already exists
-        if (!await Class.get(Data.Code)) {
+        if (!await Class.get(Data.Guild, Data.Code)) {
             const Message = `Class (${Data.Code}) does not exist within database in guild ${Data.Guild}`
             DevExecute(log.error, Message)
             throw(new Error(Message))
@@ -130,7 +129,7 @@ export class Class {
             
 
         // Remove it from the database
-        await Database.Connection.query("DELETE FROM `class` WHERE `Code`=?, `Guild`=?", [Data.Code, Data.Guild])
+        await Database.Connection.query("DELETE FROM `class` WHERE `Code`=? AND `Guild`=?", [Data.Code, Data.Guild])
         DevExecute(log.info, `Removed class (${Data.Code}) from database in guild ${Data.Guild}`)
 
         // Modifying cache after this point
