@@ -84,7 +84,7 @@ export class Textbook {
         const textbook = new Textbook(Data)
 
         // Make sure it already does not exist
-        if (await Textbook.get(Data.ISBN)) {
+        if (await Textbook.get(Data.Guild, Data.ISBN)) {
             // Add it to the cache
             if (ModifyCache && !TextbookCache.find(tb => tb == textbook)) {
                 TextbookCache.push(textbook)
@@ -122,7 +122,7 @@ export class Textbook {
         DevExecute(log.warn, `Attempting to remove textbook (${Data.ISBN}) from database${ModifyCache ? " and cache" : ""} with guild ${Data.Guild}`)
 
         // Make sure it already exists
-        if (!await Textbook.get(Data.ISBN)) {
+        if (!await Textbook.get(Data.Guild, Data.ISBN)) {
             const Message = `Textbook (${Data.ISBN}) does not exist within database with guild ${Data.Guild}`
             DevExecute(log.error, Message)
             throw(new Error(Message))

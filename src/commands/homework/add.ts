@@ -52,30 +52,13 @@ export function GetHomeworkAddModal() {
 }
 
 //
-export async function Callback(interaction: ChatInputCommandInteraction) {
-    // Grab the modal
-    const modal = GetHomeworkAddModal()
-
-    // Show it
-    await interaction.showModal(modal)
-
-    // Wait for a submit
-    const ModalSubmit = await interaction.awaitModalSubmit({
-        time: 60000
-    })
-
-    // catch timeout
-
-    //
-    await ModalCallback(ModalSubmit)
-}
-
-//
 export async function ModalCallback(interaction: ModalSubmitInteraction) {
     // Make sure we have the guild
     const guild = interaction.guild
-    if (!guild)
-        throw(new Error("Could not grab guild"))
+    if (!guild) {
+        const Message = "Could not grab guild"
+        throw(new Error(Message))
+    }
     const guildId = guild.id
 
     // Get the data
@@ -87,23 +70,30 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
     // Type checks
     const ShouldUseTextbook = ISBN != "N/A"
-    if (isNaN(parseInt(strDueIn)))
-        throw(new Error("Invalid due date (not a number)"))
+    if (isNaN(parseInt(strDueIn))) {
+        const Message = "Invalid due date (not a number)"
+        throw(new Error(Message))
+    }
 
     // Vars
     const DueIn = parseInt(strDueIn)
 
     // Grab class data
     const ClassData = await Class.get(guildId, ClassCode)
-    if (!ClassData)
-        throw(new Error("Invalid class code (does not exist)"))
+    if (!ClassData) {
+        const Message = "Invalid class code (does not exist)"
+        throw(new Error(Message))
+    }
+        
 
     // Grab textbook
     let textbook
     if (ShouldUseTextbook) {
         textbook = await Textbook.get(guildId, ISBN)
-        if (!textbook)
-        throw(new Error("Invalid textbook ISBN (does not exist)"))
+        if (!textbook) {
+            const Message = "Invalid textbook ISBN (does not exist)"
+            throw(new Error(Message))
+        }
     }
 
     // Parse the description
@@ -131,4 +121,23 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
     //
     return interaction.editReply("Done!")
+}
+
+//
+export async function Callback(interaction: ChatInputCommandInteraction) {
+    // Grab the modal
+    const modal = GetHomeworkAddModal()
+
+    // Show it
+    await interaction.showModal(modal)
+
+    // Wait for a submit
+    const ModalSubmit = await interaction.awaitModalSubmit({
+        time: 60000
+    })
+
+    // catch timeout
+
+    //
+    await ModalCallback(ModalSubmit)
 }
