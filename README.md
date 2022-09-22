@@ -1,6 +1,9 @@
 # Homework Events
 Handle homework through Discord events. Easily manage homework, allowing your classmates to co-ordinate and never forget about homework again.
 
+## Note
+You will need to manually configure the slash command permissions within `Server Settings > Integrations > Bot` and then pressing on the commands.
+
 ## Setting up
 - Make sure to download [Node JS](https://nodejs.org/en/download/) and then install Typescript by executing `npm i -g typescript` in your terminal/console
 - Configure all of the details within the config file
