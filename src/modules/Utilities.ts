@@ -21,7 +21,7 @@ export function getBaseEmbed(user?: User, condition: Condition = "Neutral") {
         .setTitle(condition == "Neutral" ? "sex" : condition)
         .setColor(convert[condition])
         .setFooter({
-            text: "Sereine Bot - Developed by Stefanuk12#5820"
+            text: "HomeworkEvents - Developed by Stefanuk12#5820"
         });
 
     // Custom Embed if user is provided
