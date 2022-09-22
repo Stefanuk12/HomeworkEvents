@@ -1,7 +1,8 @@
 // Dependencies
 import { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } from "discord.js";
 import { Textbook } from "../../modules/Textbook.js";
-import { getBaseEmbed } from "../../modules/Utilities.js";
+import { DevExecute, getBaseEmbed } from "../../modules/Utilities.js";
+import log from "fancy-log"
 
 // Slash Command
 export const SlashCommand = new SlashCommandSubcommandBuilder()
@@ -30,6 +31,7 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
     const textbook = await Textbook.get(guildId, ISBN)
     if (!textbook) {
         const Message = `Textbook ${ISBN} does not exist within guild ${guildId}`
+        DevExecute(log.error, Message)
         throw(new Error(Message))
     }
 

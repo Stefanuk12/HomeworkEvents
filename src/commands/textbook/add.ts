@@ -1,6 +1,8 @@
 // Dependencies
 import { ActionRowBuilder, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, SlashCommandSubcommandBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Textbook } from "../../modules/Textbook.js";
+import { DevExecute } from "../../modules/Utilities.js";
+import log from "fancy-log"
 
 // Slash Command
 export const SlashCommand = new SlashCommandSubcommandBuilder()
@@ -66,6 +68,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     // Make sure class does not eixst
     if (await Textbook.get(guildId, ISBN)) {
         const Message = `Textbook (${ISBN}) already exists within guild ${guildId}`
+        DevExecute(log.error, Message)
         throw(new Error(Message))
     }
         
