@@ -67,13 +67,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const strDueIn = interaction.fields.getTextInputValue("homeworkDue")
     const Request = interaction.fields.getTextInputValue("homeworkRequest")
     const ISBN = interaction.fields.getTextInputValue("homeworkISBN")
-
-    // Type checks
     const ShouldUseTextbook = ISBN != "N/A"
-    if (isNaN(parseInt(strDueIn))) {
-        const Message = "Invalid due date (not a number)"
-        throw(new Error(Message))
-    }
 
     // Vars
     const DueIn = parseInt(strDueIn)
@@ -84,7 +78,6 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         const Message = "Invalid class code (does not exist)"
         throw(new Error(Message))
     }
-        
 
     // Grab textbook
     let textbook
