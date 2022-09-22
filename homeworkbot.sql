@@ -28,6 +28,7 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `class` (
+  `Guild` text NOT NULL,
   `Subject` text NOT NULL,
   `Code` text NOT NULL,
   `Teacher` text DEFAULT NULL,
@@ -41,6 +42,7 @@ CREATE TABLE `class` (
 --
 
 CREATE TABLE `textbook` (
+  `Guild` text NOT NULL,
   `Subject` text NOT NULL,
   `Title` text NOT NULL,
   `ISBN` text NOT NULL,

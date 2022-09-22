@@ -10,6 +10,7 @@ export const ClassCache: Class[] = [] // should reflect the database
 
 //
 export interface IClass {
+    Guild: string
     Subject: string
     Code: string
     Teacher?: string
@@ -24,32 +25,32 @@ export class Class {
     }
 
     // Grabs a class
-    static async get(Code: string, UseCache: boolean = true) {
+    static async get(Guild: string, Code: string, UseCache: boolean = true) {
         // Logging
-        DevExecute(log.warn, `Attempting to grab class (${Code})`)
+        DevExecute(log.warn, `Attempting to grab class (${Code}) in guild ${Guild}`)
         
         // Attempt to get it from the cache
         const CachedClass = ClassCache.find(cclass => cclass.Code == Code)
         if (CachedClass && UseCache) {
-            DevExecute(log.info, `Retrieved class (${Code}) from cache`)
+            DevExecute(log.info, `Retrieved class (${Code}) from cache with guild ${Guild}`)
             return CachedClass
         }
             
 
         // Query the database
-        const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE `ISBN`=?", [Code])
+        const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE `ISBN`=?, `Guild`=?", [Code, Guild])
 
         // Check we got a result
         const ClassDB = result[0]
         if (!ClassDB) {
-            DevExecute(log.error, `Class (${Code}) was not found in database`)
+            DevExecute(log.error, `Class (${Code}) in guild ${Guild} was not found in database`)
             return
         }
             
         // Create an object and cache it, then return
         const cclass = new Class(ClassDB)
         ClassCache.push(cclass)
-        DevExecute(log.info, `Added class (${Code}) to cache`)
+        DevExecute(log.info, `Added class (${Code}) to cache with guild ${Guild}`)
         return cclass
     }
 
@@ -67,7 +68,7 @@ export class Class {
         // Add each result
         for (const ClassDB of result) {
             // Create an object, and cache it
-            DevExecute(log.info, `Added class (${ClassDB.ISBN}) to cache`)
+            DevExecute(log.info, `Added class (${ClassDB.ISBN}) to cache in guild ${ClassDB.Guild}`)
             ClassCache.push(
                 new Class(ClassDB)
             )
@@ -90,13 +91,13 @@ export class Class {
             }
 
             // Output
-            const Message = `Class (${Data.Code}) was already within the database`
+            const Message = `Class (${Data.Code}) was already within the database with guild ${Data.Guild}`
             DevExecute(log.error, Message)
             throw(new Error(Message))
         } 
 
         // Add it to the database
-        await Database.Connection.query("INSERT INTO `class` (`Subject`, `Code`, `Teacher`, `Room`) VALUES (?, ?, ?, ?)", [Data.Subject, Data.Code, Data.Teacher, Data.Room])
+        await Database.Connection.query("INSERT INTO `class` (`Guild` , `Subject`, `Code`, `Teacher`, `Room`) VALUES (?, ?, ?, ?, ?)", [Data.Guild, Data.Subject, Data.Code, Data.Teacher, Data.Room])
         DevExecute(log.info, `Added class (${Data.Code}) to database`)
 
         // Modifying cache after this point
@@ -109,7 +110,7 @@ export class Class {
 
         // Add it
         ClassCache.push(cclass)
-        DevExecute(log.info, `Added class (${Data.Code}) to cache`)
+        DevExecute(log.info, `Added class (${Data.Code}) to cache in guild ${Data.Guild}`)
     }
     async add(ModifyCache: boolean = true) {
         return await Class.add(this, ModifyCache)
@@ -118,19 +119,19 @@ export class Class {
     // Removing a class from the database/cache
     static async remove(Data: IClass, ModifyCache: boolean = true) {
         // Logging
-        DevExecute(log.warn, `Attempting to remove class (${Data.Code}) from database${ModifyCache ? " and cache" : ""}`)
+        DevExecute(log.warn, `Attempting to remove class (${Data.Code}) from database${ModifyCache ? " and cache" : ""} in guild ${Data.Guild}`)
 
         // Make sure it already exists
         if (!await Class.get(Data.Code)) {
-            const Message = `Class (${Data.Code}) does not exist within database`
+            const Message = `Class (${Data.Code}) does not exist within database in guild ${Data.Guild}`
             DevExecute(log.error, Message)
             throw(new Error(Message))
         }
             
 
         // Remove it from the database
-        await Database.Connection.query("DELETE FROM `class` WHERE `Code`=?", [Data.Code])
-        DevExecute(log.info, `Removed class (${Data.Code}) from database`)
+        await Database.Connection.query("DELETE FROM `class` WHERE `Code`=?, `Guild`=?", [Data.Code, Data.Guild])
+        DevExecute(log.info, `Removed class (${Data.Code}) from database in guild ${Data.Guild}`)
 
         // Modifying cache after this point
         if (!ModifyCache)
@@ -146,7 +147,7 @@ export class Class {
 
         // Remove it
         ClassCache.splice(ClassI, 1)
-        DevExecute(log.info, `Removed class (${Data.Code}) from cache`)
+        DevExecute(log.info, `Removed class (${Data.Code}) from cache in guild ${Data.Guild}`)
     }
     async remove(ModifyCache: boolean = true) {
         return await Class.remove(this, ModifyCache)

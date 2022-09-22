@@ -76,6 +76,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const guild = interaction.guild
     if (!guild)
         throw(new Error("Could not grab guild"))
+    const guildId = guild.id
 
     // Get the data
     const ClassCode = interaction.fields.getTextInputValue("homeworkClass")
@@ -93,14 +94,14 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const DueIn = parseInt(strDueIn)
 
     // Grab class data
-    const ClassData = await Class.get(ClassCode)
+    const ClassData = await Class.get(guildId, ClassCode)
     if (!ClassData)
         throw(new Error("Invalid class code (does not exist)"))
 
     // Grab textbook
     let textbook
     if (ShouldUseTextbook) {
-        textbook = await Textbook.get(ISBN)
+        textbook = await Textbook.get(guildId, ISBN)
         if (!textbook)
         throw(new Error("Invalid textbook ISBN (does not exist)"))
     }
