@@ -13,7 +13,7 @@
     "discord.js": "^14.4.0",
     "fancy-log": "^2.0.0",
     "mysql2": "^2.3.3",
-    "slashcommandhandler": "^2.2.11"
+    "slashcommandhandler": "^2.2.13"
   },
   "devDependencies": {
     "@types/fancy-log": "^2.0.0"
