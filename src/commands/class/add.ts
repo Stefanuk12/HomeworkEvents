@@ -99,10 +99,11 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     // Wait for a submit
     const ModalSubmit = await interaction.awaitModalSubmit({
+        filter: i => i.user.id === interaction.user.id,
         time: 180000 // 3 minutes
+    }).catch(() => {
+        throw(new Error("Ran out of time"))
     })
-
-    // catch timeout
 
     //
     await ModalCallback(ModalSubmit)
