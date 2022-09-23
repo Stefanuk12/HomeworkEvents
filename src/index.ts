@@ -11,4 +11,4 @@ export const client = new Client({
 import("./handlers/events.js")
 
 // Login
-client.login(process.env.TOKEN || config.BotConfig.Token)
+client.login(process.env.BOT_TOKEN || config.BotConfig.Token)
