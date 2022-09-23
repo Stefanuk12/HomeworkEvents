@@ -11,10 +11,10 @@ export namespace Database {
     export async function InitialiseConnection(){
         // Create Connection (Pool)
         Connection = mysql.createPool({
-            host: DatabaseConfig.host,
-            user: DatabaseConfig.user,
-            password: DatabaseConfig.password,
-            database: DatabaseConfig.database,
+            host: process.env.DB_HOST || DatabaseConfig.host,
+            user: process.env.DB_USER || DatabaseConfig.user,
+            password: process.env.DB_PASSWORD || DatabaseConfig.password,
+            database: process.env.DB_DATABASE || DatabaseConfig.database,
             waitForConnections: true,
             connectionLimit: 10,
             queueLimit: 0
