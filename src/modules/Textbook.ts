@@ -105,7 +105,7 @@ export class Textbook {
             return
 
         // Make sure does not exist already
-        if (!TextbookCache.find(tb => tb == textbook))
+        if (TextbookCache.find(tb => tb == textbook))
             return
 
         // Add it
