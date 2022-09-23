@@ -23,9 +23,10 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     DevExecute(log.info, `Got textbooks (${textbooks.length}) from guild ${guildId}`)
 
-    //
-    const embed = getBaseEmbed(interaction.user, "Success")
-        .addFields(
+    // Construct embed
+    let embed = getBaseEmbed(interaction.user, "Success")
+    if (textbooks.length > 0) {
+        embed = embed.addFields(
             ...textbooks.map(textbook => {
                 let formatted = `**ISBN:** ${textbook.ISBN}`
                 formatted += `\n**Subject:** ${textbook.Subject}`
@@ -37,6 +38,11 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
                 }
             }),
         )
+    }
+    else {
+        embed = embed.setDescription("No textbooks found!")
+    }
+
     return interaction.editReply({
         embeds: [embed]
     })
