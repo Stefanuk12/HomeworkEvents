@@ -75,6 +75,25 @@ export class Textbook {
         }
     }
 
+    static async list(Guild: string, UseCache: boolean = true) {
+        // Logging
+        DevExecute(log.warn, `Attempting to list available textbooks in guild ${Guild}`)
+
+        // Attempt to get it from the cache
+        if (UseCache) {
+            const CachedBooks = TextbookCache.filter(textbook => textbook.Guild == Guild)
+            DevExecute(log.info, `Received textbooks from cache with guild ${Guild}`)
+            return CachedBooks
+        }
+
+        // Query the database for each textbook
+        const [result] = await Database.Connection.query<ITextbookRow[]>("SELECT * FROM `textbook` WHERE `Guild`=?", [Guild])
+
+        // Return the result
+        DevExecute(log.info, `Received textbooks from cache with guild ${Guild}`)
+        return result.map(textbook => new Textbook(textbook))
+    }
+
     // Add a textbook to the database/cache
     static async add(Data: ITextbook, ModifyCache: boolean = true) {
         // Logging
