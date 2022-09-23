@@ -28,6 +28,7 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
         .addFields(
             ...textbooks.map(textbook => {
                 let formatted = `**ISBN:** ${textbook.ISBN}`
+                formatted += `\n**Subject:** ${textbook.Subject}`
                 formatted += `\n**Link:** ${textbook.Link || "N/A Link"}`
                 return {
                     name: textbook.Title,
