@@ -16,8 +16,8 @@ export interface IClass {
     Teacher?: string
     Room?: string
 }
-export interface IClassRow extends IClass, RowDataPacket {}
-export interface Class extends IClass {}
+export interface IClassRow extends IClass, RowDataPacket { }
+export interface Class extends IClass { }
 export class Class {
     // Constructor
     constructor(Data: IClass) {
@@ -28,13 +28,13 @@ export class Class {
     static async get(Guild: string, Code: string, UseCache: boolean = true) {
         // Logging
         DevExecute(log.warn, `Attempting to grab class (${Code}) in guild ${Guild}`)
-        
+
         // Attempt to get it from the cache
         const CachedClass = ClassCache.find(cclass => cclass.Code == Code)
         if (CachedClass && UseCache) {
             DevExecute(log.info, `Retrieved class (${Code}) from cache with guild ${Guild}`)
             return CachedClass
-        } 
+        }
 
         // Query the database
         const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE `Code`=? AND `Guild`=?", [Code, Guild])
@@ -45,7 +45,7 @@ export class Class {
             DevExecute(log.error, `Class (${Code}) in guild ${Guild} was not found in database`)
             return
         }
-            
+
         // Create an object and cache it, then return
         const cclass = new Class(ClassDB)
         ClassCache.push(cclass)
@@ -92,8 +92,8 @@ export class Class {
             // Output
             const Message = `Class (${Data.Code}) was already within the database with guild ${Data.Guild}`
             DevExecute(log.error, Message)
-            throw(new Error(Message))
-        } 
+            throw (new Error(Message))
+        }
 
         // Add it to the database
         await Database.Connection.query("INSERT INTO `class` (`Guild` , `Subject`, `Code`, `Teacher`, `Room`) VALUES (?, ?, ?, ?, ?)", [Data.Guild, Data.Subject, Data.Code, Data.Teacher, Data.Room])
@@ -124,9 +124,9 @@ export class Class {
         if (!await Class.get(Data.Guild, Data.Code)) {
             const Message = `Class (${Data.Code}) does not exist within database in guild ${Data.Guild}`
             DevExecute(log.error, Message)
-            throw(new Error(Message))
+            throw (new Error(Message))
         }
-            
+
 
         // Remove it from the database
         await Database.Connection.query("DELETE FROM `class` WHERE `Code`=? AND `Guild`=?", [Data.Code, Data.Guild])
@@ -136,11 +136,8 @@ export class Class {
         if (!ModifyCache)
             return
 
-        // Create the class object
-        const cclass = new Class(Data)
-
         // Make sure already exists
-        const ClassI = ClassCache.indexOf(cclass)
+        const ClassI = ClassCache.findIndex(cl => cl.Code == Data.Code && cl.Guild == Data.Guild)
         if (ClassI == -1)
             return
 
@@ -155,7 +152,7 @@ export class Class {
 
 // Refresh the cache periodically
 function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 (async () => {
     while (true) {
