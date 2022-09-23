@@ -104,7 +104,7 @@ export class Class {
             return
 
         // Make sure does not exist already
-        if (!ClassCache.find(cl => cl == cclass))
+        if (ClassCache.find(cl => cl == cclass))
             return
 
         // Add it
