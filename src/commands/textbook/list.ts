@@ -1,7 +1,7 @@
 // Dependencies
-import { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 import { Textbook } from "../../modules/Textbook.js";
-import { DevExecute, getBaseEmbed } from "../../modules/Utilities.js";
+import { DevExecute, getBaseEmbed, PaginationEmbed } from "../../modules/Utilities.js";
 import log from "fancy-log"
 
 // Slash Command
@@ -19,25 +19,26 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
     }
     const guildId = guild.id
 
+    // Grab the textbooks
     const textbooks = await Textbook.list(guildId)
-
     DevExecute(log.info, `Got textbooks (${textbooks.length}) from guild ${guildId}`)
 
-    //
-    const embed = getBaseEmbed(interaction.user, "Success")
-        .addFields(
-            ...textbooks.map(textbook => {
-                let formatted = `**ISBN:** ${textbook.ISBN}`
-                formatted += `\n**Subject:** ${textbook.Subject}`
-                formatted += `\n**Link:** ${textbook.Link || "N/A Link"}`
-                return {
-                    name: textbook.Title,
-                    value: formatted,
-                    inline: true,
-                }
-            }),
+    // Create the pages
+    const Pages = []
+    for (let i = 0; i < textbooks.length; i++) {
+        const textbook = textbooks[i]
+
+        Pages.push(
+            getBaseEmbed(interaction.user, "Success")
+                .setTitle(textbook.Title)
+                .addFields(
+                    {name: "Subject", value: textbook.Subject, inline: false},
+                    {name: "ISBN", value: textbook.ISBN, inline: false},
+                    {name: "Link", value: textbook.Link || "N/A", inline: false}
+                )
         )
-    return interaction.editReply({
-        embeds: [embed]
-    })
+    }
+
+    // Pages
+    await PaginationEmbed(interaction, Pages)
 }

@@ -66,7 +66,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Link = interaction.fields.getTextInputValue("textbookLink")
 
     // Make sure class does not eixst
-    if (await Textbook.get(guildId, ISBN)) {
+    if (await Textbook.get(guildId, ISBN) instanceof Textbook) {
         const Message = `Textbook (${ISBN}) already exists within guild ${guildId}`
         DevExecute(log.error, Message)
         throw(new Error(Message))

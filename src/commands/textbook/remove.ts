@@ -29,10 +29,9 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     // Check the class exists
     const textbook = await Textbook.get(guildId, ISBN)
-    if (!textbook) {
-        const Message = `Textbook ${ISBN} does not exist within guild ${guildId}`
-        DevExecute(log.error, Message)
-        throw(new Error(Message))
+    if (typeof(textbook) == "string") {
+        DevExecute(log.error, textbook)
+        throw(new Error(textbook))
     }
 
     // Remove

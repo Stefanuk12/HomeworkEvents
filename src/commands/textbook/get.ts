@@ -1,16 +1,28 @@
 // Dependencies
 import { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } from "discord.js";
-import { Textbook } from "../../modules/Textbook.js";
+import { Textbook, TextbookSearchAttributes } from "../../modules/Textbook.js";
 import { DevExecute, getBaseEmbed } from "../../modules/Utilities.js";
 import log from "fancy-log"
 
 // Slash Command
 export const SlashCommand = new SlashCommandSubcommandBuilder()
     .setName("get")
-    .setDescription("Grab a textbook by its ISBN number")
+    .setDescription("Grab a textbook")
     .addStringOption(input => input
-        .setName("isbn")
-        .setDescription("The textbook's ISBN number")
+        .setName("type")
+        .setDescription("The search term type")
+        .setChoices(
+            ...TextbookSearchAttributes.map((value, _index, _arr) => {
+                return {
+                    name: value, value: value, inline: false
+                }
+            })
+        )    
+        .setRequired(true)
+    )
+    .addStringOption(input => input
+        .setName("value")
+        .setDescription("The search term value")
         .setRequired(true)    
     );
 
@@ -24,15 +36,15 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
     }
     const guildId = guild.id
 
-    // Grab the code
-    const ISBN = interaction.options.getString("isbn", true)
+    // Vars
+    const Type = <keyof Textbook>interaction.options.getString("type", true)
+    const Value = interaction.options.getString("value", true)
 
-    // Check the class exists
-    const textbook = await Textbook.get(guildId, ISBN)
-    if (!textbook) {
-        const Message = `Textbook ${ISBN} does not exist within guild ${guildId}`
-        DevExecute(log.error, Message)
-        throw(new Error(Message))
+    // Check the textbook exists (with search term)
+    const textbook = await Textbook.getOf(guildId, Type, Value)
+    if (typeof(textbook) == "string") {
+        DevExecute(log.error, textbook)
+        throw(new Error(textbook))
     }
 
     //

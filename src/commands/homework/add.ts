@@ -101,10 +101,9 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     let textbook
     if (ShouldUseTextbook) {
         textbook = await Textbook.get(guildId, ISBN)
-        if (!textbook) {
-            const Message = "Invalid textbook ISBN (does not exist)"
-            DevExecute(log.error, Message)
-            throw(new Error(Message))
+        if (typeof(textbook) == "string") {
+            DevExecute(log.error, textbook)
+            throw(new Error(textbook))
         }
     }
 

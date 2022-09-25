@@ -9,6 +9,7 @@ import log from "fancy-log"
 export const TextbookCache: Textbook[] = [] // should reflect the database
 
 //
+export const TextbookSearchAttributes = ["Subject", "Title", "ISBN"]
 export interface ITextbook {
     Guild: string
     Subject: string
@@ -16,41 +17,41 @@ export interface ITextbook {
     ISBN: string
     Link?: string
 }
-export interface ITextbookRow extends ITextbook, RowDataPacket {}
-export interface Textbook extends ITextbook {}
+export interface ITextbookRow extends ITextbook, RowDataPacket { }
+export interface Textbook extends ITextbook { }
 export class Textbook {
     // Constructor
     constructor(Data: ITextbook) {
         Object.assign(this, Data)
     }
 
-    // Grabs a textbook
-    static async get(Guild: string, ISBN: string, UseCache: boolean = true) {
+    // Grabs a textbook (based upon type)
+    static async getOf(Guild: string, Type: keyof Textbook, Value: string, UseCache: boolean = true) {
         // Logging
-        DevExecute(log.warn, `Attempting to grab textbook (${ISBN}) in guild ${Guild}`)
-        
+        DevExecute(log.warn, `Attempting to grab textbook of type ${Type} (${Value}) in guild ${Guild}`)
+
         // Attempt to get it from the cache
-        const CachedBook = TextbookCache.find(textbook => textbook.ISBN == ISBN && textbook.Guild == Guild)
+        const CachedBook = TextbookCache.find(textbook => textbook[Type] == Value && textbook.Guild == Guild)
         if (CachedBook && UseCache) {
-            DevExecute(log.info, `Retrieved textbook (${ISBN}) from cache with guild ${Guild}`)
+            DevExecute(log.info, `Retrieved textbook of type ${Type} (${Value}) from cache with guild ${Guild}`)
             return CachedBook
         }
-            
 
         // Query the database
-        const [result] = await Database.Connection.query<ITextbookRow[]>("SELECT * FROM `textbook` WHERE `ISBN`=? AND `Guild`=?", [ISBN, Guild])
+        const [result] = await Database.Connection.query<ITextbookRow[]>(`SELECT * FROM \`textbook\` WHERE \`${Type}\`=? AND \`Guild\`=?`, [Value, Guild])
 
         // Check we got a result
         const TextbookDB = result[0]
         if (!TextbookDB) {
-            DevExecute(log.error, `Textbook (${ISBN}) was not found in database with guild ${Guild}`)
-            return
+            const Message = `Textbook with type ${Type} (${Value}) was not found in database with guild ${Guild}`
+            DevExecute(log.error, Message)
+            return Message
         }
-            
+
         // Create an object and cache it, then return
         const textbook = new Textbook(TextbookDB)
         TextbookCache.push(textbook)
-        DevExecute(log.info, `Added textbook (${ISBN}) to cache with guild ${Guild}`)
+        DevExecute(log.info, `Added textbook with type ${Type} (${Value}) to cache with guild ${Guild}`)
         return textbook
     }
 
@@ -73,6 +74,11 @@ export class Textbook {
                 new Textbook(TextbookDB)
             )
         }
+    }
+
+    // Grabs a textbook
+    static async get(Guild: string, ISBN: string, UseCache: boolean = true) {
+        return await Textbook.getOf(Guild, "ISBN", ISBN, UseCache)
     }
 
     static async list(Guild: string, UseCache: boolean = true) {
@@ -103,7 +109,7 @@ export class Textbook {
         const textbook = new Textbook(Data)
 
         // Make sure it already does not exist
-        if (await Textbook.get(Data.Guild, Data.ISBN)) {
+        if (await Textbook.get(Data.Guild, Data.ISBN) instanceof Textbook) {
             // Add it to the cache
             if (ModifyCache && !TextbookCache.find(tb => tb == textbook)) {
                 TextbookCache.push(textbook)
@@ -112,8 +118,8 @@ export class Textbook {
             // Output
             const Message = `Textbook (${Data.ISBN}) was already within the database with guild ${Data.Guild}`
             DevExecute(log.error, Message)
-            throw(new Error(Message))
-        } 
+            throw (new Error(Message))
+        }
 
         // Add it to the database
         await Database.Connection.query("INSERT INTO `textbook` (`Guild`, `Subject`, `Title`, `ISBN`, `Link`) VALUES (?, ?, ?, ?, ?)", [Data.Guild, Data.Subject, Data.Title, Data.ISBN, Data.Link])
@@ -141,12 +147,12 @@ export class Textbook {
         DevExecute(log.warn, `Attempting to remove textbook (${Data.ISBN}) from database${ModifyCache ? " and cache" : ""} with guild ${Data.Guild}`)
 
         // Make sure it already exists
-        if (!await Textbook.get(Data.Guild, Data.ISBN)) {
+        if (await Textbook.get(Data.Guild, Data.ISBN) instanceof Textbook == false) {
             const Message = `Textbook (${Data.ISBN}) does not exist within database with guild ${Data.Guild}`
             DevExecute(log.error, Message)
-            throw(new Error(Message))
+            throw (new Error(Message))
         }
-            
+
 
         // Remove it from the database
         await Database.Connection.query("DELETE FROM `textbook` WHERE `ISBN`=? AND `Guild`=?", [Data.ISBN, Data.Guild])
@@ -172,7 +178,7 @@ export class Textbook {
 
 // Refresh the cache periodically
 function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 (async () => {
     while (true) {
