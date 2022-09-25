@@ -155,11 +155,8 @@ export class Class {
         if (!ModifyCache)
             return
 
-        // Create the class object
-        const cclass = new Class(Data)
-
         // Make sure already exists
-        const ClassI = ClassCache.indexOf(cclass)
+        const ClassI = ClassCache.findIndex(cl => cl.Code == Data.Code && cl.Guild == Data.Guild)
         if (ClassI == -1)
             return
 
