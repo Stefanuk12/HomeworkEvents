@@ -96,7 +96,7 @@ export class Textbook {
         const [result] = await Database.Connection.query<ITextbookRow[]>("SELECT * FROM `textbook` WHERE `Guild`=?", [Guild])
 
         // Return the result
-        DevExecute(log.info, `Received textbooks from cache with guild ${Guild}`)
+        DevExecute(log.info, `Received textbooks from database with guild ${Guild}`)
         return result.map(textbook => new Textbook(textbook))
     }
 
