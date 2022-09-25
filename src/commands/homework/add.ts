@@ -90,12 +90,12 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     }
 
     // Grab class data
-    const ClassData = await Class.get(guildId, ClassCode)
-    if (!ClassData) {
-        const Message = "Invalid class code (does not exist)"
-        DevExecute(log.error, Message)
-        throw(new Error(Message))
+    const Classes = await Class.get(guildId, ClassCode)
+    if (typeof(Classes) == "string") {
+        DevExecute(log.error, Classes)
+        throw(new Error(Classes))
     }
+    const ClassData = Classes[0]
 
     // Grab textbook
     let textbook
@@ -105,6 +105,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
             DevExecute(log.error, textbook)
             throw(new Error(textbook))
         }
+        textbook = textbook[0]
     }
 
     // Parse the description

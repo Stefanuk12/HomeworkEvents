@@ -12,6 +12,12 @@ export const SlashCommand = new SlashCommandSubcommandBuilder()
         .setName("isbn")
         .setDescription("The textbook's ISBN number")
         .setRequired(true)    
+    )
+    .addIntegerOption(input => input
+        .setName("count")
+        .setDescription("The amount of results to remove")
+        .setMinValue(1)
+        .setRequired(true)
     );
 
 //
@@ -26,16 +32,20 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     // Grab the code
     const ISBN = interaction.options.getString("isbn", true)
+    const RemoveCount = interaction.options.getInteger("count", true)
 
     // Check the class exists
-    const textbook = await Textbook.get(guildId, ISBN)
-    if (typeof(textbook) == "string") {
-        DevExecute(log.error, textbook)
-        throw(new Error(textbook))
+    const textbooks = await Textbook.get(guildId, ISBN)
+    if (typeof(textbooks) == "string") {
+        DevExecute(log.error, textbooks)
+        throw(new Error(textbooks))
     }
 
     // Remove
-    await textbook.remove()
+    const CappedCount = RemoveCount > textbooks.length ? textbooks.length : RemoveCount
+    for (let i = 0; i < CappedCount; i++) {
+        await textbooks[i].remove()
+    }
 
     //
     return interaction.editReply("Done!")

@@ -1,7 +1,7 @@
 // Dependencies
 import { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } from "discord.js";
 import { Textbook, TextbookSearchAttributes } from "../../modules/Textbook.js";
-import { DevExecute, getBaseEmbed } from "../../modules/Utilities.js";
+import { DevExecute, getBaseEmbed, PaginationEmbed } from "../../modules/Utilities.js";
 import log from "fancy-log"
 
 // Slash Command
@@ -41,20 +41,28 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
     const Value = interaction.options.getString("value", true)
 
     // Check the textbook exists (with search term)
-    const textbook = await Textbook.getOf(guildId, Type, Value)
-    if (typeof(textbook) == "string") {
-        DevExecute(log.error, textbook)
-        throw(new Error(textbook))
+    const textbooks = await Textbook.getOf(guildId, Type, Value)
+    if (typeof(textbooks) == "string") {
+        DevExecute(log.error, textbooks)
+        throw(new Error(textbooks))
     }
 
-    //
-    const embed = getBaseEmbed(interaction.user, "Success")
-        .addFields(
-            {name: "Subject", value: textbook.Subject, inline: true},
-            {name: "Title", value: textbook.Title, inline: true},
-            {name: "Link", value: textbook.Link || "N/A Link", inline: false}
+    // Create the pages
+    const Pages = []
+    for (let i = 0; i < textbooks.length; i++) {
+        const textbook = textbooks[i]
+
+        Pages.push(
+            getBaseEmbed(interaction.user, "Success")
+                .setTitle(textbook.Title)
+                .addFields(
+                    {name: "Subject", value: textbook.Subject, inline: false},
+                    {name: "ISBN", value: textbook.ISBN, inline: false},
+                    {name: "Link", value: textbook.Link || "N/A", inline: false}
+                )
         )
-    return interaction.editReply({
-        embeds: [embed]
-    })
+    }
+
+    // Pages
+    await PaginationEmbed(interaction, Pages)
 }

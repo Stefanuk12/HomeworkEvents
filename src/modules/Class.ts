@@ -24,33 +24,47 @@ export class Class {
         Object.assign(this, Data)
     }
 
-    // Grabs a class
-    static async get(Guild: string, Code: string, UseCache: boolean = true) {
+    // Grabs a class (based upon type)
+    static async getOf(Guild: string, Type: keyof Class, Value: string, UseCache: boolean = true) {
         // Logging
-        DevExecute(log.warn, `Attempting to grab class (${Code}) in guild ${Guild}`)
+        DevExecute(log.warn, `Attempting to grab classes of type ${Type} (${Value}) in guild ${Guild}`)
 
         // Attempt to get it from the cache
-        const CachedClass = ClassCache.find(cclass => cclass.Code == Code)
-        if (CachedClass && UseCache) {
-            DevExecute(log.info, `Retrieved class (${Code}) from cache with guild ${Guild}`)
+        const CachedClass = ClassCache.filter(cclass => cclass[Type] == Value && cclass.Guild == Guild)
+        if (CachedClass.length > 0 && UseCache) {
+            DevExecute(log.info, `Retrieved classes of type ${Type} (${Value}) with count ${CachedClass.length} from cache with guild ${Guild}`)
             return CachedClass
         }
 
         // Query the database
-        const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE `Code`=? AND `Guild`=?", [Code, Guild])
+        const [result] = await Database.Connection.query<IClassRow[]>(`SELECT * FROM \`class\` WHERE \`${Type}\`=? AND \`Guild\`=?`, [Value, Guild])
 
         // Check we got a result
-        const ClassDB = result[0]
-        if (!ClassDB) {
-            DevExecute(log.error, `Class (${Code}) in guild ${Guild} was not found in database`)
-            return
+        if (result.length == 0) {
+            const Message = `Classes with type ${Type} (${Value}) was not found in database with guild ${Guild}`
+            DevExecute(log.error, Message)
+            return Message
         }
 
-        // Create an object and cache it, then return
-        const cclass = new Class(ClassDB)
-        ClassCache.push(cclass)
-        DevExecute(log.info, `Added class (${Code}) to cache with guild ${Guild}`)
-        return cclass
+        // Convert from objects to classes
+        const classes = result.map((value) => {
+            return new Class(value)
+        })
+
+        // Cache the results
+        CachedClass.forEach((value) => {
+            // Add if not in cache
+            if (!CachedClass.find(textbook => textbook == value && textbook.Guild == Guild))
+                CachedClass.push(value)
+        })
+        
+        // Return
+        return classes
+    }
+
+    // Grabs a class
+    static async get(Guild: string, Code: string, UseCache: boolean = true) {
+        return await Class.getOf(Guild, "Code", Code, UseCache)
     }
 
     // Refreshes the entire cache

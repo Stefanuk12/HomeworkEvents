@@ -10,6 +10,12 @@ export const SlashCommand = new SlashCommandSubcommandBuilder()
         .setName("code")
         .setDescription("The class code")
         .setRequired(true)    
+    )
+    .addIntegerOption(input => input
+        .setName("count")
+        .setDescription("The amount of results to remove")
+        .setMinValue(1)
+        .setRequired(true)
     );
 
 //
@@ -24,16 +30,19 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     // Grab the code
     const Code = interaction.options.getString("code", true)
+    const RemoveCount = interaction.options.getInteger("count", true)
 
     // Check the class exists
-    const cclass = await Class.get(guildId, Code)
-    if (!cclass) {
-        const Message = `Class ${Code} does not exist within guild ${guildId}`
-        throw(new Error(Message))
+    const classes = await Class.get(guildId, Code)
+    if (typeof(classes) == "string") {
+        throw(new Error(classes))
     }
 
     // Remove
-    await cclass.remove()
+    const CappedCount = RemoveCount > classes.length ? classes.length : RemoveCount
+    for (let i = 0; i < CappedCount; i++) {
+        await classes[i].remove()
+    }
 
     //
     return interaction.editReply("Done!")

@@ -26,14 +26,14 @@ export class Textbook {
     }
 
     // Grabs a textbook (based upon type)
-    static async getOf(Guild: string, Type: keyof Textbook, Value: string, UseCache: boolean = true) {
+    static async getOf(Guild: string, Type: keyof Textbook, Value: string, UseCache: boolean = true, ReturnAll: boolean = false) {
         // Logging
         DevExecute(log.warn, `Attempting to grab textbook of type ${Type} (${Value}) in guild ${Guild}`)
 
         // Attempt to get it from the cache
-        const CachedBook = TextbookCache.find(textbook => textbook[Type] == Value && textbook.Guild == Guild)
-        if (CachedBook && UseCache) {
-            DevExecute(log.info, `Retrieved textbook of type ${Type} (${Value}) from cache with guild ${Guild}`)
+        const CachedBook = TextbookCache.filter(textbook => textbook[Type] == Value && textbook.Guild == Guild)
+        if (CachedBook.length > 0 && UseCache) {
+            DevExecute(log.info, `Retrieved textbooks of type ${Type} (${Value}) with count ${CachedBook.length} from cache with guild ${Guild}`)
             return CachedBook
         }
 
@@ -41,18 +41,26 @@ export class Textbook {
         const [result] = await Database.Connection.query<ITextbookRow[]>(`SELECT * FROM \`textbook\` WHERE \`${Type}\`=? AND \`Guild\`=?`, [Value, Guild])
 
         // Check we got a result
-        const TextbookDB = result[0]
-        if (!TextbookDB) {
-            const Message = `Textbook with type ${Type} (${Value}) was not found in database with guild ${Guild}`
+        if (result.length == 0) {
+            const Message = `Textbooks with type ${Type} (${Value}) was not found in database with guild ${Guild}`
             DevExecute(log.error, Message)
             return Message
         }
 
-        // Create an object and cache it, then return
-        const textbook = new Textbook(TextbookDB)
-        TextbookCache.push(textbook)
-        DevExecute(log.info, `Added textbook with type ${Type} (${Value}) to cache with guild ${Guild}`)
-        return textbook
+        // Convert from objects to classes
+        const textbooks = result.map((value) => {
+            return new Textbook(value)
+        })
+
+        // Cache the results
+        CachedBook.forEach((value) => {
+            // Add if not in cache
+            if (!TextbookCache.find(textbook => textbook == value && textbook.Guild == Guild))
+                TextbookCache.push(value)
+        })
+        
+        // Return
+        return textbooks
     }
 
     // Refreshes the entire cache
