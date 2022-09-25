@@ -21,6 +21,10 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
 
     // Grab the textbooks
     const textbooks = await Textbook.list(guildId)
+    if (textbooks.length == 0) {
+        const Message = "No textbooks found in guild " + guildId
+        throw (new Error(Message))
+    }
     DevExecute(log.info, `Got textbooks (${textbooks.length}) from guild ${guildId}`)
 
     // Create the pages
