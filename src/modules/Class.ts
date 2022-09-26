@@ -76,7 +76,7 @@ export class Class {
         const [result] = await Database.Connection.query<IClassRow[]>("SELECT * FROM `class` WHERE 1")
 
         // Empty the current cache
-        ClassCache.splice(0, Class.length)
+        ClassCache.splice(0, ClassCache.length)
 
         // Add each result
         for (const ClassDB of result) {

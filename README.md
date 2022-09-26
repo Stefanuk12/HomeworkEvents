@@ -5,6 +5,11 @@ Handle homework through Discord events. Easily manage homework, allowing your cl
 You will need to manually configure the slash command permissions within `Server Settings > Integrations > Bot` and then pressing on the commands.
 
 ## Setting up
+
+### Required Permissions
+The bot should only need the `Manage Events` permission. However, it might also need the `Server Members Intent` but I am not sure. Example invite link: https://discord.com/api/oauth2/authorize?client_id=BOT_CLIENT_ID&permissions=8589934592&scope=bot
+
+### Installation
 - Make sure to download [Node JS](https://nodejs.org/en/download/) and then install Typescript by executing `npm i -g typescript` in your terminal/console
 - Either:
   - Configure all of the details within the config file (`src/config.ts`) **or**

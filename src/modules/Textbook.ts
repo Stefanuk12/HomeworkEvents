@@ -72,7 +72,7 @@ export class Textbook {
         const [result] = await Database.Connection.query<ITextbookRow[]>("SELECT * FROM `textbook` WHERE 1")
 
         // Empty the current cache
-        TextbookCache.splice(0, Textbook.length)
+        TextbookCache.splice(0, TextbookCache.length)
 
         // Add each result
         for (const TextbookDB of result) {
