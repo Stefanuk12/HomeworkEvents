@@ -21,11 +21,6 @@ export function GetModal() {
         .setCustomId("homeworkModal")
         .setTitle("Homework Create");
 
-    // const Class = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    //     .setCustomId("homeworkClass")
-    //     .setLabel("Class Code")
-    //     .setRequired(true)
-    //     .setStyle(TextInputStyle.Short));
     const Title = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId("homeworkTitle")
         .setLabel("Title")
@@ -43,7 +38,7 @@ export function GetModal() {
         .setStyle(TextInputStyle.Paragraph));
 
     // Optional data
-    const textbook = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    const useTextboook = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId("homeworkUseTB")
         .setLabel("Do you want to specify a textbook? (1/0)")
         .setMaxLength(1)
@@ -52,7 +47,7 @@ export function GetModal() {
         .setStyle(TextInputStyle.Short));
 
     // Add each actionrow to modal
-    modal.addComponents(/*Class, */Title, DueIn, Request, textbook)
+    modal.addComponents(Title, DueIn, Request, useTextboook)
 
     // Return
     return modal
@@ -64,7 +59,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const guild = interaction.guild
     if (!guild) {
         const Message = "Could not grab guild"
-        throw(new Error(Message))
+        throw (new Error(Message))
     }
     const guildId = guild.id
 
@@ -110,8 +105,8 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
             },
             time: 60000,
             componentType: ComponentType.SelectMenu,
-        }).catch(err => {
-            throw(new Error("Timed out."))
+        }).catch(_ => {
+            throw (new Error("Timed out."))
         })
 
         // Set
@@ -120,7 +115,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         // Make sure is defined
         if (!ClassCode) {
             const Message = "Did not recieve class code"
-            throw(new Error(Message))
+            throw (new Error(Message))
         }
     }
 
@@ -159,7 +154,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
             time: 60000,
             componentType: ComponentType.SelectMenu
         }).catch(err => {
-            throw(new Error("Timed out."))
+            throw (new Error("Timed out."))
         })
 
         // Set
@@ -168,7 +163,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         // Make sure is defined
         if (!ISBN) {
             const Message = "Did not recieve class code"
-            throw(new Error(Message))
+            throw (new Error(Message))
         }
     }
 
@@ -179,18 +174,18 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     if (isNaN(DueIn)) {
         const Message = "Invalid due in (NaN)"
         DevExecute(log.error, Message)
-        throw(new Error(Message))
+        throw (new Error(Message))
     } else if (DueIn < 0) {
         const Message = "Invalid due in (negative)"
         DevExecute(log.error, Message)
-        throw(new Error(Message))
+        throw (new Error(Message))
     }
 
     // Grab class data
     const Classes = await Class.get(guildId, ClassCode)
-    if (typeof(Classes) == "string") {
+    if (typeof (Classes) == "string") {
         DevExecute(log.error, Classes)
-        throw(new Error(Classes))
+        throw (new Error(Classes))
     }
     const ClassData = Classes[0]
 
@@ -198,9 +193,9 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     let textbook
     if (ShouldUseTextbook && ISBN) {
         textbook = await Textbook.get(guildId, ISBN)
-        if (typeof(textbook) == "string") {
+        if (typeof (textbook) == "string") {
             DevExecute(log.error, textbook)
-            throw(new Error(textbook))
+            throw (new Error(textbook))
         }
         textbook = textbook[0]
     }
@@ -249,7 +244,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 //
 export async function Callback(interaction: ChatInputCommandInteraction) {
     // Grab the modal
-    const modal = GetModal() 
+    const modal = GetModal()
 
     // Show it
     await interaction.showModal(modal)
@@ -259,7 +254,7 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
         filter: i => i.user.id === interaction.user.id,
         time: 180000 // 3 minutes
     }).catch(() => {
-        throw(new Error("Ran out of time"))
+        throw (new Error("Ran out of time"))
     })
 
     //
