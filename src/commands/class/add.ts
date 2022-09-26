@@ -66,7 +66,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Room = interaction.fields.getTextInputValue("classRoom")
 
     // Make sure class does not exist
-    if (await Class.get(guildId, Code)) {
+    if (await Class.get(guildId, Code) instanceof Class) {
         const Message = `Class (${Code}) already exists within guild ${guildId}`
         DevExecute(log.info, Message)
         throw(new Error(Message))

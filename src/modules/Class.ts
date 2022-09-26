@@ -116,7 +116,7 @@ export class Class {
         const cclass = new Class(Data)
 
         // Make sure it already does not exist
-        if (await Class.get(Data.Guild, Data.Code)) {
+        if (await Class.get(Data.Guild, Data.Code) instanceof Class) {
             // Add it to the cache
             if (ModifyCache && !ClassCache.find(cl => cl == cclass)) {
                 ClassCache.push(cclass)
@@ -154,12 +154,11 @@ export class Class {
         DevExecute(log.warn, `Attempting to remove class (${Data.Code}) from database${ModifyCache ? " and cache" : ""} in guild ${Data.Guild}`)
 
         // Make sure it already exists
-        if (!await Class.get(Data.Guild, Data.Code)) {
+        if (await Class.get(Data.Guild, Data.Code) instanceof Class == false) {
             const Message = `Class (${Data.Code}) does not exist within database in guild ${Data.Guild}`
             DevExecute(log.error, Message)
             throw (new Error(Message))
         }
-
 
         // Remove it from the database
         await Database.Connection.query("DELETE FROM `class` WHERE `Code`=? AND `Guild`=?", [Data.Code, Data.Guild])
