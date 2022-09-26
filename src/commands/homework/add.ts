@@ -53,6 +53,55 @@ export function GetModal() {
     return modal
 }
 
+async function GetClassCode(interaction: ModalSubmitInteraction, guild: string) {
+    // Grab our classes
+    const classes = await Class.list(guild)
+    const class_options = classes.map(cclass => {
+        return {
+            label: `${cclass.Subject} | ${cclass.Teacher || "No Teacher"}`,
+            description: cclass.Room || "No Class",
+            value: cclass.Code,
+        }
+    })
+
+    // Prompt the user for the code
+    const row = new ActionRowBuilder<SelectMenuBuilder>()
+        .addComponents(
+            new SelectMenuBuilder()
+                .setCustomId("homeworkClass")
+                .setPlaceholder("Select a Class")
+                .addOptions(...class_options)
+        );
+    const message = await interaction.reply({
+        ephemeral: true,
+        content: "Please select a class to assign to",
+        components: [row],
+        fetchReply: true
+    })
+
+    // Grab the response
+    const Response = await message.awaitMessageComponent({
+        filter: (i) => {
+            i.deferUpdate()
+            return i.user.id === interaction.user.id
+        },
+        time: 60000,
+        componentType: ComponentType.SelectMenu,
+    }).catch(_ => {
+        throw (new Error("Timed out."))
+    })
+
+    const ClassCode = Response.values[0]
+
+    // Make sure is defined
+    if (!ClassCode) {
+        const Message = "Did not recieve class code"
+        throw (new Error(Message))
+    }
+
+    return ClassCode;
+}
+
 //
 export async function ModalCallback(interaction: ModalSubmitInteraction) {
     // Make sure we have the guild
@@ -70,54 +119,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const ShouldUseTextbook = interaction.fields.getTextInputValue("homeworkUseTB") == "1"
 
     // Grab the class code
-    let ClassCode: string
-    {
-        // Grab our classes
-        const classes = await Class.list(guildId)
-        const class_options = classes.map(cclass => {
-            return {
-                label: `${cclass.Subject} | ${cclass.Teacher || "No Teacher"}`,
-                description: cclass.Room || "No Class",
-                value: cclass.Code,
-            }
-        })
-
-        // Prompt the user for the code
-        const row = new ActionRowBuilder<SelectMenuBuilder>()
-            .addComponents(
-                new SelectMenuBuilder()
-                    .setCustomId("homeworkClass")
-                    .setPlaceholder("Select a Class")
-                    .addOptions(...class_options)
-            );
-        const message = await interaction.reply({
-            ephemeral: true,
-            content: "Please select a class to assign to",
-            components: [row],
-            fetchReply: true
-        })
-
-        // Grab the response
-        const Response = await message.awaitMessageComponent({
-            filter: (i) => {
-                i.deferUpdate()
-                return i.user.id === interaction.user.id
-            },
-            time: 60000,
-            componentType: ComponentType.SelectMenu,
-        }).catch(_ => {
-            throw (new Error("Timed out."))
-        })
-
-        // Set
-        ClassCode = Response.values[0]
-
-        // Make sure is defined
-        if (!ClassCode) {
-            const Message = "Did not recieve class code"
-            throw (new Error(Message))
-        }
-    }
+    const ClassCode = await GetClassCode(interaction, guildId)
 
     // Grab the textbook
     let ISBN: string | undefined
