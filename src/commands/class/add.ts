@@ -65,13 +65,6 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Teacher = interaction.fields.getTextInputValue("classTeacher")
     const Room = interaction.fields.getTextInputValue("classRoom")
 
-    // Make sure class does not exist
-    if (await Class.get(guildId, Code) instanceof Class) {
-        const Message = `Class (${Code}) already exists within guild ${guildId}`
-        DevExecute(log.info, Message)
-        throw(new Error(Message))
-    }
-
     // Create the object
     const cclass = new Class({
         Guild: guildId,
@@ -80,6 +73,8 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         Teacher,
         Room
     })
+    
+    // Attempt to add the class
     await cclass.add()
 
     //
