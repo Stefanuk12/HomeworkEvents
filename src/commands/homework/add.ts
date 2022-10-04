@@ -37,17 +37,8 @@ export function GetModal() {
         .setRequired(true)
         .setStyle(TextInputStyle.Paragraph));
 
-    // Optional data
-    const useTextboook = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setCustomId("homeworkUseTB")
-        .setLabel("Do you want to specify a textbook? (1/0)")
-        .setMaxLength(1)
-        .setRequired(false)
-        .setValue("0")
-        .setStyle(TextInputStyle.Short));
-
     // Add each actionrow to modal
-    modal.addComponents(Title, DueIn, Request, useTextboook)
+    modal.addComponents(Title, DueIn, Request)
 
     // Return
     return modal
@@ -120,7 +111,14 @@ async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: strin
             new SelectMenuBuilder()
                 .setCustomId("textbookISBN")
                 .setPlaceholder("Select a Textbook")
-                .addOptions(...textbook_options)
+                .addOptions(
+                    {
+                        label: "None",
+                        description: "No textbooks applicable",
+                        value: "N/A", // TODO: Figure out a better value to assign this, this will break if a server has a textbook of ISBN `N/A`
+                    },
+                    ...textbook_options
+                )
         );
     const message = await interaction.editReply({
         content: "Please select a textbook",
@@ -164,14 +162,10 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Title = interaction.fields.getTextInputValue("homeworkTitle")
     const strDueIn = interaction.fields.getTextInputValue("homeworkDue")
     const Request = interaction.fields.getTextInputValue("homeworkRequest")
-    const ShouldUseTextbook = interaction.fields.getTextInputValue("homeworkUseTB") == "1"
 
     // Grab the class code and textbook ISBN
     const ClassCode = await GetClassCode(interaction, guildId)
-    let ISBN: undefined | string
-    if (ShouldUseTextbook) {
-        ISBN = await GetTextbookISBN(interaction, guildId)
-    }
+    const ISBN = await GetTextbookISBN(interaction, guildId)
 
     // Vars
     const DueIn = parseInt(strDueIn)
@@ -197,7 +191,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
     // Grab textbook
     let textbook
-    if (ShouldUseTextbook && ISBN) {
+    if (ISBN !== "N/A") { // TODO: Once again, figure out a better way to do this
         textbook = await Textbook.get(guildId, ISBN)
         if (typeof (textbook) == "string") {
             DevExecute(log.error, textbook)
