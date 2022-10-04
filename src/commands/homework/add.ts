@@ -102,6 +102,54 @@ async function GetClassCode(interaction: ModalSubmitInteraction, guild: string) 
     return ClassCode;
 }
 
+
+async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: string) {
+    // Grab our textbooks
+    const textbooks = await Textbook.list(guild)
+    const textbook_options = textbooks.map(textbook => {
+        return {
+            label: textbook.Title,
+            description: textbook.Subject,
+            value: textbook.ISBN,
+        }
+    })
+
+    // Prompt the user for the code
+    const row = new ActionRowBuilder<SelectMenuBuilder>()
+        .addComponents(
+            new SelectMenuBuilder()
+                .setCustomId("textbookISBN")
+                .setPlaceholder("Select a Textbook")
+                .addOptions(...textbook_options)
+        );
+    const message = await interaction.editReply({
+        content: "Please select a textbook",
+        components: [row],
+    })
+
+    // Grab the response
+    const Response = await message.awaitMessageComponent({
+        filter: (i) => {
+            i.deferUpdate()
+            return i.user.id === interaction.user.id
+        },
+        time: 60000,
+        componentType: ComponentType.SelectMenu,
+    }).catch(_ => {
+        throw (new Error("Timed out."))
+    })
+
+    const TextbookISBN = Response.values[0]
+
+    // Make sure is defined
+    if (!TextbookISBN) {
+        const Message = "Did not recieve textbook ISBN"
+        throw (new Error(Message))
+    }
+
+    return TextbookISBN;
+}
+
 //
 export async function ModalCallback(interaction: ModalSubmitInteraction) {
     // Make sure we have the guild
@@ -118,55 +166,11 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Request = interaction.fields.getTextInputValue("homeworkRequest")
     const ShouldUseTextbook = interaction.fields.getTextInputValue("homeworkUseTB") == "1"
 
-    // Grab the class code
+    // Grab the class code and textbook ISBN
     const ClassCode = await GetClassCode(interaction, guildId)
-
-    // Grab the textbook
-    let ISBN: string | undefined
+    let ISBN: undefined | string
     if (ShouldUseTextbook) {
-        // Grab our classes
-        const textbooks = await Textbook.list(guildId)
-        const textbook_options = textbooks.map(textbook => {
-            return {
-                label: textbook.Title,
-                description: textbook.Subject,
-                value: textbook.ISBN,
-            }
-        })
-
-        // Prompt the user for the textbook
-        const row = new ActionRowBuilder<SelectMenuBuilder>()
-            .addComponents(
-                new SelectMenuBuilder()
-                    .setCustomId("homeworkISBN")
-                    .setPlaceholder("Select a Textbook")
-                    .addOptions(...textbook_options)
-            );
-        const message = await interaction.editReply({
-            content: "Please select a textbook",
-            components: [row]
-        })
-
-        // Grab the response
-        const Response = await message.awaitMessageComponent({
-            filter: (i) => {
-                i.deferUpdate()
-                return i.user.id === interaction.user.id
-            },
-            time: 60000,
-            componentType: ComponentType.SelectMenu
-        }).catch(err => {
-            throw (new Error("Timed out."))
-        })
-
-        // Set
-        ISBN = Response.values[0]
-
-        // Make sure is defined
-        if (!ISBN) {
-            const Message = "Did not recieve class code"
-            throw (new Error(Message))
-        }
+        ISBN = await GetTextbookISBN(interaction, guildId)
     }
 
     // Vars
