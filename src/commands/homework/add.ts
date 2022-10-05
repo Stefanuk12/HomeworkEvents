@@ -3,7 +3,7 @@ import { ComponentType, ActionRowBuilder, ChatInputCommandInteraction, GuildSche
 import config from "../../config.js";
 import { Class } from "../../modules/Class.js";
 import { Textbook } from "../../modules/Textbook.js";
-import { DevExecute, getBaseEmbed } from "../../modules/Utilities.js";
+import { DevExecute } from "../../modules/Utilities.js";
 import log from "fancy-log"
 
 // Slash Command
