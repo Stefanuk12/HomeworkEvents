@@ -21,11 +21,6 @@ export function GetModal() {
         .setCustomId("homeworkModal")
         .setTitle("Homework Create");
 
-    // const Class = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    //     .setCustomId("homeworkClass")
-    //     .setLabel("Class Code")
-    //     .setRequired(true)
-    //     .setStyle(TextInputStyle.Short));
     const Title = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId("homeworkTitle")
         .setLabel("Title")
@@ -42,20 +37,115 @@ export function GetModal() {
         .setRequired(true)
         .setStyle(TextInputStyle.Paragraph));
 
-    // Optional data
-    const textbook = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setCustomId("homeworkUseTB")
-        .setLabel("Do you want to specify a textbook? (1/0)")
-        .setMaxLength(1)
-        .setRequired(false)
-        .setValue("0")
-        .setStyle(TextInputStyle.Short));
-
     // Add each actionrow to modal
-    modal.addComponents(/*Class, */Title, DueIn, Request, textbook)
+    modal.addComponents(Title, DueIn, Request)
 
     // Return
     return modal
+}
+
+async function GetClassCode(interaction: ModalSubmitInteraction, guild: string) {
+    // Grab our classes
+    const classes = await Class.list(guild)
+    const class_options = classes.map(cclass => {
+        return {
+            label: `${cclass.Subject} | ${cclass.Teacher || "No Teacher"}`,
+            description: cclass.Room || "No Class",
+            value: cclass.Code,
+        }
+    })
+
+    // Prompt the user for the code
+    const row = new ActionRowBuilder<SelectMenuBuilder>()
+        .addComponents(
+            new SelectMenuBuilder()
+                .setCustomId("homeworkClass")
+                .setPlaceholder("Select a Class")
+                .addOptions(...class_options)
+        );
+    const message = await interaction.reply({
+        ephemeral: true,
+        content: "Please select a class to assign to",
+        components: [row],
+        fetchReply: true
+    })
+
+    // Grab the response
+    const Response = await message.awaitMessageComponent({
+        filter: (i) => {
+            i.deferUpdate()
+            return i.user.id === interaction.user.id
+        },
+        time: 60000,
+        componentType: ComponentType.SelectMenu,
+    }).catch(_ => {
+        throw (new Error("Timed out."))
+    })
+
+    const ClassCode = Response.values[0]
+
+    // Make sure is defined
+    if (!ClassCode) {
+        const Message = "Did not recieve class code"
+        throw (new Error(Message))
+    }
+
+    return ClassCode;
+}
+
+
+async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: string) {
+    // Grab our textbooks
+    const textbooks = await Textbook.list(guild)
+    const textbook_options = textbooks.map(textbook => {
+        return {
+            label: textbook.Title,
+            description: textbook.Subject,
+            value: textbook.ISBN,
+        }
+    })
+
+    // Prompt the user for the code
+    const row = new ActionRowBuilder<SelectMenuBuilder>()
+        .addComponents(
+            new SelectMenuBuilder()
+                .setCustomId("textbookISBN")
+                .setPlaceholder("Select a Textbook")
+                .addOptions(
+                    {
+                        label: "None",
+                        description: "No textbooks applicable",
+                        value: "N/A", // TODO: Figure out a better value to assign this, this will break if a server has a textbook of ISBN `N/A`
+                    },
+                    ...textbook_options
+                )
+        );
+    const message = await interaction.editReply({
+        content: "Please select a textbook",
+        components: [row],
+    })
+
+    // Grab the response
+    const Response = await message.awaitMessageComponent({
+        filter: (i) => {
+            i.deferUpdate()
+            return i.user.id === interaction.user.id
+        },
+        time: 60000,
+        componentType: ComponentType.SelectMenu,
+    }).catch(_ => {
+        throw (new Error("Timed out."))
+    })
+
+    const TextbookISBN = Response.values[0]
+
+    // Make sure is defined
+    if (!TextbookISBN) {
+        const Message = "Did not recieve textbook ISBN"
+        throw (new Error(Message))
+    }
+
+    return TextbookISBN;
 }
 
 //
@@ -64,7 +154,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const guild = interaction.guild
     if (!guild) {
         const Message = "Could not grab guild"
-        throw(new Error(Message))
+        throw (new Error(Message))
     }
     const guildId = guild.id
 
@@ -72,105 +162,10 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const Title = interaction.fields.getTextInputValue("homeworkTitle")
     const strDueIn = interaction.fields.getTextInputValue("homeworkDue")
     const Request = interaction.fields.getTextInputValue("homeworkRequest")
-    const ShouldUseTextbook = interaction.fields.getTextInputValue("homeworkUseTB") == "1"
 
-    // Grab the class code
-    let ClassCode: string
-    {
-        // Grab our classes
-        const classes = await Class.list(guildId)
-        const class_options = classes.map(cclass => {
-            return {
-                label: `${cclass.Subject} | ${cclass.Teacher || "No Teacher"}`,
-                description: cclass.Room || "No Class",
-                value: cclass.Code,
-            }
-        })
-
-        // Prompt the user for the code
-        const row = new ActionRowBuilder<SelectMenuBuilder>()
-            .addComponents(
-                new SelectMenuBuilder()
-                    .setCustomId("homeworkClass")
-                    .setPlaceholder("Select a Class")
-                    .addOptions(...class_options)
-            );
-        const message = await interaction.reply({
-            ephemeral: true,
-            content: "Please select a class to assign to",
-            components: [row],
-            fetchReply: true
-        })
-
-        // Grab the response
-        const Response = await message.awaitMessageComponent({
-            filter: (i) => {
-                i.deferUpdate()
-                return i.user.id === interaction.user.id
-            },
-            time: 60000,
-            componentType: ComponentType.SelectMenu,
-        }).catch(err => {
-            throw(new Error("Timed out."))
-        })
-
-        // Set
-        ClassCode = Response.values[0]
-
-        // Make sure is defined
-        if (!ClassCode) {
-            const Message = "Did not recieve class code"
-            throw(new Error(Message))
-        }
-    }
-
-    // Grab the textbook
-    let ISBN: string | undefined
-    if (ShouldUseTextbook) {
-        // Grab our classes
-        const textbooks = await Textbook.list(guildId)
-        const textbook_options = textbooks.map(textbook => {
-            return {
-                label: textbook.Title,
-                description: textbook.Subject,
-                value: textbook.ISBN,
-            }
-        })
-
-        // Prompt the user for the textbook
-        const row = new ActionRowBuilder<SelectMenuBuilder>()
-            .addComponents(
-                new SelectMenuBuilder()
-                    .setCustomId("homeworkISBN")
-                    .setPlaceholder("Select a Textbook")
-                    .addOptions(...textbook_options)
-            );
-        const message = await interaction.editReply({
-            content: "Please select a textbook",
-            components: [row]
-        })
-
-        // Grab the response
-        const Response = await message.awaitMessageComponent({
-            filter: (i) => {
-                i.deferUpdate()
-                return i.user.id === interaction.user.id
-            },
-            time: 60000,
-            componentType: ComponentType.SelectMenu
-        }).catch(err => {
-            throw(new Error("Timed out."))
-        })
-
-        // Set
-        ISBN = Response.values[0]
-
-        // Make sure is defined
-        if (!ISBN) {
-            const Message = "Did not recieve class code"
-            throw(new Error(Message))
-        }
-    }
+    // Grab the class code and textbook ISBN
+    const ClassCode = await GetClassCode(interaction, guildId)
+    const ISBN = await GetTextbookISBN(interaction, guildId)
 
     // Vars
     const DueIn = parseInt(strDueIn)
@@ -179,28 +174,28 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     if (isNaN(DueIn)) {
         const Message = "Invalid due in (NaN)"
         DevExecute(log.error, Message)
-        throw(new Error(Message))
+        throw (new Error(Message))
     } else if (DueIn < 0) {
         const Message = "Invalid due in (negative)"
         DevExecute(log.error, Message)
-        throw(new Error(Message))
+        throw (new Error(Message))
     }
 
     // Grab class data
     const Classes = await Class.get(guildId, ClassCode)
-    if (typeof(Classes) == "string") {
+    if (typeof (Classes) == "string") {
         DevExecute(log.error, Classes)
-        throw(new Error(Classes))
+        throw (new Error(Classes))
     }
     const ClassData = Classes[0]
 
     // Grab textbook
     let textbook
-    if (ShouldUseTextbook && ISBN) {
+    if (ISBN !== "N/A") { // TODO: Once again, figure out a better way to do this
         textbook = await Textbook.get(guildId, ISBN)
-        if (typeof(textbook) == "string") {
+        if (typeof (textbook) == "string") {
             DevExecute(log.error, textbook)
-            throw(new Error(textbook))
+            throw (new Error(textbook))
         }
         textbook = textbook[0]
     }
@@ -249,7 +244,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 //
 export async function Callback(interaction: ChatInputCommandInteraction) {
     // Grab the modal
-    const modal = GetModal() 
+    const modal = GetModal()
 
     // Show it
     await interaction.showModal(modal)
@@ -259,7 +254,7 @@ export async function Callback(interaction: ChatInputCommandInteraction) {
         filter: i => i.user.id === interaction.user.id,
         time: 180000 // 3 minutes
     }).catch(() => {
-        throw(new Error("Ran out of time"))
+        throw (new Error("Ran out of time"))
     })
 
     //
