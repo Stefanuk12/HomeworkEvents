@@ -57,7 +57,7 @@ export class Class {
             if (!CachedClass.find(textbook => textbook == value && textbook.Guild == Guild))
                 CachedClass.push(value)
         })
-        
+
         // Return
         return classes
     }
@@ -154,7 +154,8 @@ export class Class {
         DevExecute(log.warn, `Attempting to remove class (${Data.Code}) from database${ModifyCache ? " and cache" : ""} in guild ${Data.Guild}`)
 
         // Make sure it already exists
-        if (await Class.get(Data.Guild, Data.Code) instanceof Class == false) {
+        const classes = await Class.get(Data.Guild, Data.Code)
+        if (typeof (classes) == "string") {
             const Message = `Class (${Data.Code}) does not exist within database in guild ${Data.Guild}`
             DevExecute(log.error, Message)
             throw (new Error(Message))
