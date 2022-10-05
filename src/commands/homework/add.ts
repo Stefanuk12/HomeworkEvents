@@ -162,7 +162,10 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
     // Grab the class code and textbook ISBN
     const ClassCode = await GetClassCode(interaction, guildId)
-    const ISBN = await GetTextbookISBN(interaction, guildId)
+    let ISBN: string | null = null
+    if ((await Textbook.list(guildId)).length != 0) {
+        ISBN = await GetTextbookISBN(interaction, guildId)
+    }
 
     // Vars
     const DueIn = parseInt(strDueIn)
