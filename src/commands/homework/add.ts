@@ -3,7 +3,7 @@ import { ComponentType, ActionRowBuilder, ChatInputCommandInteraction, GuildSche
 import config from "../../config.js";
 import { Class } from "../../modules/Class.js";
 import { Textbook } from "../../modules/Textbook.js";
-import { DevExecute } from "../../modules/Utilities.js";
+import { DevExecute, getBaseEmbed } from "../../modules/Utilities.js";
 import log from "fancy-log"
 
 // Slash Command
@@ -240,6 +240,18 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
 //
 export async function Callback(interaction: ChatInputCommandInteraction) {
+    // Make sure we have the guild
+    const guild = interaction.guild
+    if (!guild) {
+        const Message = "Could not grab guild"
+        throw (new Error(Message))
+    }
+
+    const classes = await Class.list(guild.id)
+    if (classes.length == 0) {
+        throw (new Error("No classes available, create one with `/class add`!"))
+    }
+
     // Grab the modal
     const modal = GetModal()
 
