@@ -1,5 +1,5 @@
 // Dependencies
-import { ComponentType, ActionRowBuilder, ChatInputCommandInteraction, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, ModalBuilder, ModalSubmitInteraction, SelectMenuBuilder, SlashCommandSubcommandBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ComponentType, ActionRowBuilder, ChatInputCommandInteraction, GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel, ModalBuilder, ModalSubmitInteraction, SelectMenuBuilder, SlashCommandSubcommandBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle } from "discord.js";
 import config from "../../config.js";
 import { Class } from "../../modules/Class.js";
 import { Textbook } from "../../modules/Textbook.js";
@@ -106,23 +106,24 @@ async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: strin
     })
 
     // Prompt the user for the code
-    const row = new ActionRowBuilder<SelectMenuBuilder>()
+    const selectMenu = new ActionRowBuilder<SelectMenuBuilder>()
         .addComponents(
             new SelectMenuBuilder()
                 .setCustomId("textbookISBN")
-                .setPlaceholder("Select a Textbook")
-                .addOptions(
-                    {
-                        label: "None",
-                        description: "No textbooks applicable",
-                        value: "N/A", // TODO: Figure out a better value to assign this, this will break if a server has a textbook of ISBN `N/A`
-                    },
-                    ...textbook_options
-                )
+                .setPlaceholder("None selected")
+                .addOptions(...textbook_options),
         );
+    const skipButton = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("textbookSkip")
+                .setLabel("Skip")
+                .setEmoji({ name: "⏩" })
+                .setStyle(ButtonStyle.Success)
+        )
     const message = await interaction.editReply({
-        content: "Please select a textbook",
-        components: [row],
+        content: "Please select a textbook:",
+        components: [selectMenu, skipButton],
     })
 
     // Grab the response
@@ -132,20 +133,16 @@ async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: strin
             return i.user.id === interaction.user.id
         },
         time: 60000,
-        componentType: ComponentType.SelectMenu,
     }).catch(_ => {
         throw (new Error("Timed out."))
     })
 
-    const TextbookISBN = Response.values[0]
-
-    // Make sure is defined
-    if (!TextbookISBN) {
-        const Message = "Did not recieve textbook ISBN"
-        throw (new Error(Message))
+    if (Response.isSelectMenu()) {
+        return Response.values[0];
     }
-
-    return TextbookISBN;
+    else {
+        return null;
+    }
 }
 
 //
@@ -191,7 +188,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
     // Grab textbook
     let textbook
-    if (ISBN !== "N/A") { // TODO: Once again, figure out a better way to do this
+    if (ISBN) {
         textbook = await Textbook.get(guildId, ISBN)
         if (typeof (textbook) == "string") {
             DevExecute(log.error, textbook)
