@@ -111,7 +111,8 @@ async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: strin
             new SelectMenuBuilder()
                 .setCustomId("textbookISBN")
                 .setPlaceholder("None selected")
-                .addOptions(...textbook_options),
+                .addOptions(...textbook_options)
+                .setMaxValues(textbook_options.length),
         );
     const skipButton = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
@@ -138,7 +139,7 @@ async function GetTextbookISBN(interaction: ModalSubmitInteraction, guild: strin
     })
 
     if (Response.isSelectMenu()) {
-        return Response.values[0];
+        return Response.values;
     }
     else {
         return null;
@@ -162,9 +163,9 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
 
     // Grab the class code and textbook ISBN
     const ClassCode = await GetClassCode(interaction, guildId)
-    let ISBN: string | null = null
+    let ISBNs: string[] | null = null
     if ((await Textbook.list(guildId)).length != 0) {
-        ISBN = await GetTextbookISBN(interaction, guildId)
+        ISBNs = await GetTextbookISBN(interaction, guildId)
     }
 
     // Vars
@@ -190,14 +191,18 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
     const ClassData = Classes[0]
 
     // Grab textbook
-    let textbook
-    if (ISBN) {
-        textbook = await Textbook.get(guildId, ISBN)
-        if (typeof (textbook) == "string") {
-            DevExecute(log.error, textbook)
-            throw (new Error(textbook))
+    let textbook_string = "No textbooks attached"
+    if (ISBNs && ISBNs.length > 0) {
+        textbook_string = ""
+        for (const ISBN of ISBNs) {
+            const textbook = await Textbook.get(guildId, ISBN)
+            if (typeof (textbook) == "string") {
+                DevExecute(log.error, textbook)
+                throw (new Error(textbook))
+            }
+            textbook_string += `- ${textbook[0].Title} (${textbook[0].Link || "No link"})\n`
         }
-        textbook = textbook[0]
+        textbook_string = textbook_string.trim()
     }
 
     // Parse the description
@@ -206,8 +211,7 @@ export async function ModalCallback(interaction: ModalSubmitInteraction) {
         .replaceAll("%CLASSCODE%", ClassData.Code)
         .replaceAll("%CLASSTEACHER%", ClassData.Teacher || "N/A")
         .replaceAll("%CLASSROOM%", ClassData.Room || "N/A")
-        .replaceAll("%TEXTBOOKTITLE%", textbook?.Title || "N/A")
-        .replaceAll("%TEXTBOOKLINK%", textbook?.Link || "https://google.com/")
+        .replaceAll("%TEXTBOOKS%", textbook_string)
         .replaceAll("%REQUEST%", Request);
 
     // Calculate the dates
