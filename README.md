@@ -25,7 +25,6 @@ The bot should only need the `Manage Events` permission. However, it might also 
   - If on windows, execute each line of the file seperate?
 
 # To Do
-- [ ] Add support for multiple textbook selections
 - [ ] Add support for a default textbook(s) for a class
 - [ ] Add automatic FrogOS sync
 
